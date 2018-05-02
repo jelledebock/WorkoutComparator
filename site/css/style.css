@@ -1,0 +1,15 @@
+#map { height: 100%;}
+.main-screen{
+  height: 90%;
+}
+#weather .panel-row{
+  margin: 5px;
+}
+.panel-default{
+  background-color: orange;
+  border-radius: 3px;
+}
+
+.text-box-panel{
+  padding-left: 10px;
+}
