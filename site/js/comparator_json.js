@@ -1,6 +1,8 @@
 var power_chart_area;
 var charts = {};
+
 json_data = JSON.parse(data);
+
 colors = ["red","blue","green","purple","orange","pink","black"]
 get_summary(json_data);
 console.log(get_graph(json_data, 'power'));

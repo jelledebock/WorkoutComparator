@@ -1,4 +1,4 @@
-function get_summary(json){
+function get_summary(json_data){
   summary=json_data["summary"];
   summary_html = '<table class="table"><thead class="thead-dark"><tr>'+
                     '<th>File</th>'+
@@ -14,7 +14,7 @@ function get_summary(json){
     for(var key in summary){
       summary_html += '<tr>';
       summary_html += '<td>'+key+'</td>';
-      summary_html += '<td>'+summary[key]['NP']+'</td>';
+      summary_html += '<td>'+Math.round(summary[key]['NP'])+'</td>';
       summary_html += '<td>'+summary[key]['avg_power']+'</td>';
       summary_html += '<td>'+summary[key]['avg_heart_rate']+'</td>';
       summary_html += '<td>'+summary[key]['avg_cadence']+'</td>';

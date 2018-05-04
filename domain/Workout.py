@@ -1,5 +1,6 @@
 import domain.File
 import pandas as pd
+import math
 
 class Session:
     def __init__(self, name):
@@ -17,7 +18,6 @@ class Session:
 
     def convert_to_dfs(self):
         for file in self.linked_files:
-            print(file)
             self.linked_dfs.append(domain.File.parse_file(file))
 
     def get_output(self):
@@ -51,17 +51,29 @@ class Session:
             df = self.linked_dfs[i]
             label = self.file_labels[i]
 
+            has_power = df['power'].sum()>0
             avg_power = round(df['power'].mean())
-            rolling_power = df['power'].rolling(window=30, center=False).mean()
-            normalized_power = round(rolling_power.mean())
+            rolling_power = df['power'].rolling(window=30, center=False).mean().pow(4)
+            normalized_power = round(math.pow(rolling_power.mean(), 0.25))
+            print(normalized_power)
+
+            has_hr = df['heart_rate'].sum()>0
             avg_bpm = round(df['heart_rate'].mean())
+
+            has_cad = df['cadence'].sum()>0
             avg_cad = round(df['cadence'].mean())
 
             max_power = round(df['power'].max())
             max_bpm = round(df['heart_rate'].max())
             max_cad = round(df['cadence'].max())
 
+            outdoor_or_virtual = df['lat'].sum()>0
+
             self.summary[label] = {
+                                    "has_power": int(has_power),
+                                    "has_cadence": int(has_cad),
+                                    "has_hr": int(has_hr),
+                                    "outdoor_or_virtual": int(outdoor_or_virtual),
                                     "NP": normalized_power,
                                     "max_power": max_power,
                                     "avg_power":avg_power,

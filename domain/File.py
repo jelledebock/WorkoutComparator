@@ -50,16 +50,21 @@ def fit_to_df(fit_path):
                 lon_values.append(0)
 
     epoch = datetime.datetime(1970, 1, 1)
-
-    epoch_values = [int((x-epoch).total_seconds()) for x in time_values]
+    print(time_values[0])
+    epoch_values = [(x-epoch).total_seconds() for x in time_values]
 
     columns = ['lat', 'lon', 'timestamp', 'datetime', 'heart_rate', 'cadence', 'power']
     df = pd.DataFrame.from_items(zip(columns, [lat_values, lon_values, epoch_values, time_values, hr_values, cadence_values, power_values]))
     df.fillna(0, inplace=True)
+    print(df)
     return df
 
 
 TWO_POW_31 = float(2147483648)
+
+
+def set_offset_seconds(df, seconds):
+    df['timestamp']=df['timestamp'] + seconds
 
 
 def semicircles2degrees(value):
@@ -71,7 +76,7 @@ def to_datetime(x):
 
 
 def to_epoch(x):
-    return int(x/1000)
+    return int(x/1000.0)
 
 
 def csv_to_df(csv_file_str):
@@ -82,6 +87,6 @@ def csv_to_df(csv_file_str):
     columns = ['lat', 'lon', 'timestamp', 'datetime', 'heart_rate', 'cadence', 'power']
     df = csv_file[['latitide', 'longitude', 'epoch', 'timestamp_fmt', 'bpm', 'cadence', 'watts']]
     df.columns = columns
-    df.fillna(0,inplace=True)
+    df.fillna(0, inplace=True)
     return df
 

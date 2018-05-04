@@ -1,15 +1,27 @@
-
+var colors = ["red","blue","green","purple","orange","pink","black"];
 var charts = {};
-json_data = JSON.parse(data);
-colors = ["red","blue","green","purple","orange","pink","black"]
+if($("#parameters").data('json_url')!=""){
+    json_url = $("#parameters").data('json_url');
+    console.log("Trying to retrieve "+json_url);
 
-get_summary(json_data);
-console.log(get_graph(json_data, 'power'));
-console.log(get_graph(json_data, 'cadence'));
+    $.getJSON("/"+$("#parameters").data('json_url'), function(json_data) {
+        console.log(json_data);
+        get_summary(json_data);
+        console.log(json_data);
+        console.log(get_graph(json_data, 'power'));
+        console.log(get_graph(json_data, 'cadence'));
+    });}
+else{
+    json_data = JSON.parse(data);
+    get_summary(json_data);
+    console.log(json_data);
+    console.log(get_graph(json_data, 'power'));
+    console.log(get_graph(json_data, 'cadence'));
+}
 
 function get_graph(json, metric) {
     values = json["values"];
-    indexes = json["file_labels"]
+    indexes = json["file_labels"];
     indexes_array_loc = {};
     number_of_series = indexes.length
     series = [];
@@ -56,11 +68,13 @@ function add_chart(name, title, data, x_label, y_label){
         .axisLabel(y_label)
         .tickFormat(d3.format('.02f'));
 
+
+
     /* Done setting the chart up? Time to render it!*/
     var myData = data;
 
     d3.select("#"+name)    //Select the <svg> element you want to render the chart in.
-        .datum(myData)         //Populate the <svg> element with chart data...
+        .datum(myData)     //Populate the <svg> element with chart data...
         .call(chart);          //Finally, render the chart!
 
     //Update the chart when window resizes.
