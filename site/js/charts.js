@@ -1,11 +1,12 @@
 var colors = ["red","blue","green","purple","orange","pink","black"];
 var charts = {};
+var json_url;
+
 if($("#parameters").data('json_url')!=""){
     json_url = $("#parameters").data('json_url');
     console.log("Trying to retrieve "+json_url);
 
-    $.getJSON("/"+$("#parameters").data('json_url'), function(json_data) {
-        console.log(json_data);
+    $.getJSON('/'+$("#parameters").data('json_url'), function(json_data) {
         get_summary(json_data);
         console.log(json_data);
         console.log(get_graph(json_data, 'power'));
@@ -20,28 +21,25 @@ else{
 }
 
 function get_graph(json, metric) {
-    values = json["values"];
-    indexes = json["file_labels"];
-    indexes_array_loc = {};
-    number_of_series = indexes.length
     series = [];
-    var i=0;
+    indexes = json["file_labels"];
 
-    for(key in indexes){
-        indexes_array_loc[indexes[key]]=key;
-        series[i]={};
-        series[i]["key"]=indexes[key];
-        series[i]["values"]=[];
-        series[i]["color"]=colors[i];
+    for(key in indexes) {
+        file_label = json['file_labels'][key];
+        series[key]={};
+        series[key].key=file_label;
+        series[key].values=[];
+        series[key].color=colors[key];
 
-        i++;
-    }
-    for(var key in values){
-      for(var j=0; j<values[key][metric].length; j++){
-        series_label = values[key]["label"][j];
-        loc = indexes_array_loc[series_label]
-        series[loc]["values"].push({x:Number(key), y:values[key][metric][j]});
-      }
+          $.ajax({
+             async: false,
+             url: '/values?metric='+metric+'&json_url='+encodeURIComponent(json_url)+'&file_label='+file_label,
+             dataType: "json",
+             success: function(data){
+                series[key].values=data;
+                console.log("Done retrieving data of key "+key);
+             }
+          });
     }
     add_chart(metric+"-graph", metric+" graph", series, "timestamp", metric);
 
@@ -54,11 +52,8 @@ function add_chart(name, title, data, x_label, y_label){
   nv.addGraph(function() {
     var chart = nv.models.lineWithFocusChart();
 
-    chart.xAxis
-        .tickFormat(d3.format(',f'));
-
-    chart.yAxis
-        .tickFormat(d3.format(',.2f'));
+    chart.y2Axis
+          .tickFormat(d3.format(',.2f'));
 
     chart.xAxis     //Chart x-axis settings
         .axisLabel(x_label)
@@ -66,15 +61,12 @@ function add_chart(name, title, data, x_label, y_label){
 
     chart.yAxis     //Chart y-axis settings
         .axisLabel(y_label)
-        .tickFormat(d3.format('.02f'));
-
+.tickFormat(d3.format('.02f'));
 
 
     /* Done setting the chart up? Time to render it!*/
-    var myData = data;
-
     d3.select("#"+name)    //Select the <svg> element you want to render the chart in.
-        .datum(myData)     //Populate the <svg> element with chart data...
+        .datum(data)     //Populate the <svg> element with chart data...
         .call(chart);          //Finally, render the chart!
 
     //Update the chart when window resizes.

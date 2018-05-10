@@ -10,9 +10,9 @@ console.log(get_graph(json_data, 'cadence'));
 
 function get_graph(json, metric) {
     values = json["values"];
-    indexes = json["file_labels"]
+    indexes = json["file_labels"];
     indexes_array_loc = {};
-    number_of_series = indexes.length
+    number_of_series = indexes.length;
     console.log("Number of series : "+number_of_series);
     series = [];
     var i=0;
@@ -29,11 +29,11 @@ function get_graph(json, metric) {
 
         i++;
     }
-    console.log(indexes_array_loc);
+
     for(var key in values){
       for(var j=0; j<values[key][metric].length; j++){
         series_label = values[key]["label"][j];
-        loc = indexes_array_loc[series_label]
+        loc = indexes_array_loc[series_label];
         series[loc]["data"].push({x:Number(key), y:values[key][metric][j]});
       }
     }

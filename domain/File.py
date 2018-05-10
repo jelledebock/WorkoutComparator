@@ -2,6 +2,7 @@ import file_parsers.fitparse
 import datetime
 import pandas as pd
 import os.path
+import domain.Workout
 
 
 def parse_file(file_path):
@@ -66,6 +67,45 @@ TWO_POW_31 = float(2147483648)
 def set_offset_seconds(df, seconds):
     df['timestamp']=df['timestamp'] + seconds
 
+
+def get_df(json, file):
+    columns = ['lat', 'lon', 'timestamp', 'datetime', 'heart_rate', 'cadence', 'power']
+    df = pd.DataFrame(columns=columns)
+    for key in json['values']:
+        value = json['values'][key]
+        pos_in_labels = -1
+        i=0
+        for label in value['label']:
+            if label == file:
+                pos_in_labels = i
+            i+=1
+
+        if pos_in_labels != -1:
+            df.append([             value['lat'][pos_in_labels],
+                                    value['lon'][pos_in_labels],
+                                    key,
+                                    value['heart_rate'][pos_in_labels],
+                                    value['power'][pos_in_labels],
+                                    value['cadence'][pos_in_labels]
+                      ])
+
+    time_session_obj = domain.Workout.DateTimeSession()
+
+    return df
+
+
+def get_x_y_values(df, x, y):
+    output = []
+    for index, row in df.iterrows():
+        output.append({'x': row[x], 'y': row[y]})
+
+    return output
+
+
+def modify_with_offset(df_file, offset):
+    df = pd.read_csv(df_file)
+    df['timestamp']=df['timestamp'].apply(lambda x: float(x) + float(offset))
+    df.to_csv(df_file, index=False)
 
 def semicircles2degrees(value):
     return value*(180.0/TWO_POW_31)

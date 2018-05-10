@@ -1,6 +1,16 @@
 import domain.File
 import pandas as pd
+import json
 import math
+import os
+import numpy as np
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
+
 
 class Session:
     def __init__(self, name):
@@ -20,31 +30,20 @@ class Session:
         for file in self.linked_files:
             self.linked_dfs.append(domain.File.parse_file(file))
 
-    def get_output(self):
+    def get_output(self, summary_location, dfs_location):
         self.convert_to_dfs()
         for i in range(0, len(self.linked_dfs)):
             df = self.linked_dfs[i]
             label = self.file_labels[i]
 
-            for index, row in df.iterrows():
-                if row[self.sort_by] in self.output_object:
-                    self.output_object[row[self.sort_by]]['power'].append(row['power'])
-                    self.output_object[row[self.sort_by]]['heart_rate'].append(row['heart_rate'])
-                    self.output_object[row[self.sort_by]]['cadence'].append(row['cadence'])
-                    self.output_object[row[self.sort_by]]['lat'].append(row['lat'])
-                    self.output_object[row[self.sort_by]]['lon'].append(row['lon'])
-                    self.output_object[row[self.sort_by]]['label'].append(label)
-                else:
-                    self.output_object[row[self.sort_by]] = {}
-                    self.output_object[row[self.sort_by]]['power'] = [row['power']]
-                    self.output_object[row[self.sort_by]]['heart_rate'] = [row['heart_rate']]
-                    self.output_object[row[self.sort_by]]['cadence'] = [row['cadence']]
-                    self.output_object[row[self.sort_by]]['lat'] = [row['lat']]
-                    self.output_object[row[self.sort_by]]['lon'] = [row['lon']]
-                    self.output_object[row[self.sort_by]]['label'] = [label]
+            os.makedirs(os.path.dirname(dfs_location+'/'+label+'.csv'), exist_ok=True)
+            df.to_csv(os.path.join(dfs_location, label+'.csv'), index=False, na_rep=0)
 
         self.summarize()
-        return {'file_labels': self.file_labels, 'values': self.output_object, 'summary': self.summary}
+        os.makedirs(os.path.dirname(summary_location), exist_ok=True)
+
+        with open(summary_location, 'w') as ofile:
+            ofile.write(json.dumps({'file_labels': self.file_labels, 'summary': self.summary, "sort_by": self.sort_by}, cls=NumpyEncoder))
 
     def summarize(self):
         for i in range(0, len(self.linked_dfs)):
@@ -80,7 +79,7 @@ class Session:
                                     "max_heart_rate":max_bpm,
                                     "avg_heart_rate":avg_bpm,
                                     "max_cadence": max_cad,
-                                    "avg_cadence":avg_cad
+                                    "avg_cadence":avg_cad,
             }
 
 

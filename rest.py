@@ -1,12 +1,15 @@
+import urllib.parse
 import json
 
 import flask
-from flask import Flask, json, request, redirect, url_for, render_template
+from flask import Flask, json, request, redirect, url_for, render_template, jsonify
 import os
 import numpy as np
+import pandas as pd
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import domain.Workout
+import domain.File
 
 app = Flask(__name__, static_url_path='', static_folder='site', template_folder='templates')
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -14,13 +17,6 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 UPLOAD_FOLDER = './site/files'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = set(['fit', 'csv'])
-
-
-class NumpyEncoder(json.JSONEncoder):                       
-    def default(self, obj):                                 
-        if isinstance(obj, np.int64):                       
-            return int(obj)                                 
-        return json.JSONEncoder.default(self, obj)          
 
 
 def allowed_file(filename):
@@ -40,7 +36,41 @@ def upload_file():
 
 @app.route('/view/<file_name>')
 def view(file_name):
-    return render_template('index-nvd3.html', json_url='files/{}.json'.format(file_name))
+    return render_template('index-nvd3.html', json_url='files/json/{}.json'.format(file_name))
+
+
+@app.route('/values')
+def values():
+    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+    metric = urllib.parse.unquote(request.args.get('metric'))
+    json_url = urllib.parse.unquote(request.args.get('json_url'))
+    df_folder = os.path.join(SITE_ROOT, 'site/files', 'dfs', json_url.split('.')[0].split('/')[-1])
+    json_path = os.path.join(SITE_ROOT, 'site', json_url)
+
+    file_name = urllib.parse.unquote(request.args.get('file_label'))
+    csv_df_file = os.path.join(df_folder, file_name)
+    csv_df_file += '.csv'
+
+    with open(json_path) as ifile:
+        json_obj = json.loads(ifile.read())
+        sort_by = json_obj["sort_by"]
+        print("Getting {} values of {} in {}".format(metric, json_url, file_name))
+
+    return flask.jsonify(domain.File.get_x_y_values(pd.read_csv(csv_df_file), sort_by, metric))
+
+
+@app.route('/edit')
+def edit():
+    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+    file_name = urllib.parse.unquote(request.args.get('file_name'))
+    file_subcomponent = urllib.parse.unquote(request.args.get('file_subcomponent'))+'.csv'
+    offset = urllib.parse.unquote(request.args.get('offset'))
+    folder = file_name.split('/')[-1].split('.')[-2]
+
+    df_file = os.path.join(SITE_ROOT, 'site', 'files', 'dfs', folder, file_subcomponent)
+    domain.File.modify_with_offset(df_file, offset)
+
+    return json.dumps({'success':True})
 
 
 @app.route('/uploader', methods=['POST'])
@@ -74,10 +104,13 @@ def do_upload():
         for file_path in file_names:
             files.add_file(file_path, file_labels[i])
             i+=1
-            
-        with open(UPLOAD_FOLDER+'/{}.json'.format(secure_filename(description)), 'w') as ofile:
-            ofile.write(json.dumps(files.get_output(), cls=NumpyEncoder))
-            return render_template('index-nvd3.html', json_url='files/{}.json'.format(secure_filename(description)))
+
+        dir_to_upload_dfs = os.path.join(UPLOAD_FOLDER, 'dfs', secure_filename(description))
+        summary_upload = os.path.join(UPLOAD_FOLDER, 'json', secure_filename(description)+'.json')
+
+        files.get_output(summary_upload, dir_to_upload_dfs)
+
+        return render_template('index-nvd3.html', json_url='files/json/{}.json'.format(secure_filename(description)))
 
     return root()
 
