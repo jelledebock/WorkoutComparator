@@ -18,7 +18,7 @@ distro-info==0.17
 Django==1.11.5
 docopt==0.6.2
 Flask==0.12.2
-Flask-Cors==3.0.3
+Flask-Cors==3.0.9
 future==0.15.2
 gast==0.2.0
 GDAL==2.2.1
