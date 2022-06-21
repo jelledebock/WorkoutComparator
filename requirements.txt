@@ -51,7 +51,7 @@ msgpack-python==0.4.8
 nbformat==4.4.0
 neovim==0.1.13
 nose2==0.6.5
-numpy==1.14.2
+numpy==1.22.0
 oauth==1.0.1
 olefile==0.44
 OWSLib==0.14.0
