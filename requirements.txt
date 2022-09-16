@@ -43,7 +43,7 @@ lazr.restfulclient==0.13.5
 lazr.uri==1.0.3
 louis==3.0.0
 lxml==4.0.0
-Mako==1.0.7
+Mako==1.2.2
 Markdown==2.6.11
 MarkupSafe==1.0
 mock==2.0.0
